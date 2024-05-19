@@ -11,7 +11,7 @@
  * @param {number} n (mod p)
  * @returns {number}
  */
-const gradient = (p, q, n) => {
+export const gradient = (p, q, n) => {
   const x = q.x - p.x;
   const y = q.y - p.y;
   for (let i = 1; i < n; i++) {
@@ -28,7 +28,7 @@ const gradient = (p, q, n) => {
  * @param {number} n (mod p)
  * @returns {{x: number, y: number}}
  */
-const pointAddition = (p, q, n) => {
+export const pointAddition = (p, q, n) => {
   const m = gradient(p, q, n);
   let xr = (Math.pow(m, 2) - p.x - q.x) % n;
   let yr = (m * (p.x - xr) - p.y) % n;
@@ -42,7 +42,7 @@ const pointAddition = (p, q, n) => {
  * @param {number} n (mod p)
  * @returns {{x: number, y: number}}
  */
-const pointSubstraction = (p, q, n) => {
+export const pointSubstraction = (p, q, n) => {
   const m = gradient(p, q, n);
   const minQ = { x: q.x, y: -q.y };
   const xr = Math.pow(m, 2) - p.x - (minQ.x % n);
@@ -57,7 +57,7 @@ const pointSubstraction = (p, q, n) => {
  * @param {number} n (mod p)
  * @returns {{x: number, y: number}}
  */
-const pointDoubling = (p, a, n) => {
+export const pointDoubling = (p, a, n) => {
   if (p.y === 0) {
     return { x: 0, y: 0 };
   }
@@ -67,7 +67,6 @@ const pointDoubling = (p, a, n) => {
   const yr = m * (p.x - xr) - (p.y % n);
   return { xr, yr };
 };
-console.log(pointDoubling({ x: 2, y: 4 }, 1, 11));
 
 /**
  * @description Point iteration (P^k = kP = P + P + ... + P)
@@ -75,7 +74,7 @@ console.log(pointDoubling({ x: 2, y: 4 }, 1, 11));
  * @param {number} k
  * @returns {{x: number, y: number}}
  */
-const pointIteration = (p, k) => {
+export const pointIteration = (p, k) => {
   // TODO: test this function
   let result = { x: 0, y: 0 };
   for (let i = 0; i < k; i++) {
@@ -91,7 +90,7 @@ const pointIteration = (p, k) => {
  * @param {number} p
  * @returns {{x: number, y: number}[]}
  */
-const listPoints = (a, b, p) => {
+export const listPoints = (a, b, p) => {
   const points = [];
   for (let x = 0; x < p; x++) {
     // count if y^2 ≡ x^3 + ax + b (mod p)
