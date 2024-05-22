@@ -2,6 +2,9 @@ import { Server } from "socket.io";
 import http from "http";
 import express from "express";
 
+import ECDH from "../utils/ecdh.js";
+import ECDHHandshake from "../models/ecdhHandshake.model.js";
+
 const app = express();
 
 const server = http.createServer(app);
@@ -17,21 +20,34 @@ export const getReceiverSocketId = (receiverId) => {
 };
 
 const userSocketMap = {}; // {userId: socketId}
+ECDHHandshake.deleteMany()
+	.then(() => { console.log("Deleting ECDH handshake data...") })
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
 	console.log("a user connected", socket.id);
 
-	const userId = socket.handshake.query.userId;
+	const { userId, clientPublicKey } = socket.handshake.query;
 	if (userId != "undefined") userSocketMap[userId] = socket.id;
 
-	// io.emit() is used to send events to all the connected clients
+	const serverECDH = new ECDH("secp128r1");
+	socket.emit('serverPublicKey', JSON.stringify(serverECDH.publicKey));
+	console.log("Sending server public key");
+
+	const sharedSecret = serverECDH.computeSharedSecret(JSON.parse(clientPublicKey));
+	await ECDHHandshake.findOneAndUpdate(
+		{ userId },
+		{ userId, sharedSecret },
+		{ upsert: true, new: true, setDefaultOnInsert: true },
+	);
+
 	io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
-	// socket.on() is used to listen to the events. can be used both on client and server side
-	socket.on("disconnect", () => {
+	socket.on("disconnect", async () => {
 		console.log("user disconnected", socket.id);
 		delete userSocketMap[userId];
 		io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+		await ECDHHandshake.findOneAndDelete({ userId })
 	});
 });
 

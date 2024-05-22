@@ -10,6 +10,11 @@ export default defineConfig({
 			"/api": {
 				target: "http://localhost:5000",
 			},
+      "/blockcipher": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/blockcipher/, ''),
+      },
 		},
   },
 })

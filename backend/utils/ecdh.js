@@ -2,15 +2,15 @@ import crypto from "crypto"
 import BN from "bn.js"
 
 const pCurve = {
-  "secp256r1": {
-    p: new BN("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16),
-    a: new BN(0),
-    b: new BN(7),
+  "secp128r1": {
+    p: new BN("FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFF", 16),
+    a: new BN("FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFC", 16),
+    b: new BN("E87579C11079F43DD824993C2CEE5ED3", 16),
     G: {
-      x: new BN("79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798", 16),
-      y: new BN("483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8", 16)
+      x: new BN("161FF7528B899B2D0C28607CA52C5B86", 16),
+      y: new BN("CF5AC8395BAFEB13C02DA292DDED7A83", 16)
     },
-    n: new BN("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141", 16)
+    n: new BN("FFFFFFFE0000000075A30D1B9038A115", 16)
   }
 }
 
@@ -27,9 +27,9 @@ export default class ECDH {
   }
 
   getRandomPrivateKey() {
-    let key = new BN(crypto.randomBytes(32), 16);
+    let key = new BN(crypto.randomBytes(16), 16);
     while (key.cmp(this.curve.n) >= 0 || key.isZero()) {
-      key = new BN(crypto.randomBytes(32), 16);
+      key = new BN(crypto.randomBytes(16), 16);
     }
     return key;
   }
@@ -81,7 +81,13 @@ export default class ECDH {
     const {x, y} = otherPublicKey;
     const publicKey = { x: new BN(x, 16), y: new BN(y, 16) };
 
-    const sharedSecret = this.scalarMultiply(publicKey, 16);
-    return sharedSecret.x;
+    let sharedSecret = this.scalarMultiply(publicKey);
+    sharedSecret = sharedSecret.x.toString("hex");
+    if (sharedSecret.length % 2 !== 0) {
+      sharedSecret = "0" + sharedSecret;
+    }
+
+    // eslint-disable-next-line no-undef
+    return sharedSecret
   }
 }
