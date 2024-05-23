@@ -44,7 +44,7 @@ function keyExpansion(key, rounds, length) {
         }
 
         for (let i = 0; i < temp.length; i++) {
-            temp[i] ^= expandedKey[expandedKey.length - length + i];
+            temp[i] ^= expandedKey[expandedKey.length - key.length + i];
         }
 
         expandedKey.push(...temp);
