@@ -91,7 +91,7 @@ export const pointIteration = (p, k) => {
  * @returns {{x: number, y: number}[]}
  */
 export const listPoints = (a, b, p) => {
-  const points = [];
+  const points = [{x: 0, y:0}]
   for (let x = 0; x < p; x++) {
     // count if y^2 ≡ x^3 + ax + b (mod p)
     const y2 = Math.pow(x, 3) + a * x + b;
@@ -103,3 +103,66 @@ export const listPoints = (a, b, p) => {
   }
   return points;
 };
+
+/**
+ * Encode messages into points inside Elliptic Curve y^2 ≡ x^3 + ax + b (mod p) using Kolbitz
+ * @param {string} s string that will be encoded
+ * @param {number} a coefficient in elliptic curve equation
+ * @param {number} b constants in elliptic curve equation
+ * @param {number} p p in elliptic curve e equation
+ * @return {{x: number, y:number}[]} array of points with length s.length
+ */
+export const encodeMessage = (s, a, b, p) => {
+  let points = [];
+
+  // karakter penyusun pesan 0,1,2,...,9
+  // A,B,C,...,Z = 10,11,12,...,35
+  // kodekan tiap karakter pesan menjadi nilai m
+  for (let i = 0; i < s.length; i++){
+    let m = s.charCodeAt(i);
+
+    // pilih k sebagai parameter basis, disepakati 2 pihak
+    let k = 20;
+
+    // untuk setiap nilai mk, nyatakan x = mk + 1, sulihi nilai x ke dalam kurva eliptik. y^2 = x^3 + ax + b (mod p).
+    let found = false;
+    let j = 1;
+    do {
+      let x = m * k + j;
+      let fx = (Math.pow(x, 3) + a * x + b) % p;
+
+      // jika ada nilai y yang memenuhi y^2 ≡ x^3 + ax + b (mod p), maka (x,y) adalah titik pada kurva eliptik
+      let y = 0;
+      while (Math.pow(y, 2) % p !== fx && y < p) y++;
+      if (Math.pow(y, 2) % p === fx) {
+        points.push({ x, y });
+        found = true;
+      }
+      j++;
+    } while (!found && j < 10);
+  }
+
+  return points;
+}
+
+/**
+ * Decode points inside Elliptic Curve y^2 ≡ x^3 + ax + b (mod p) into string message using Kolbitz
+ * @param {{x: number, y: number}[]} points
+ * @param {number} a
+ * @param {number} b
+ * @param {number} p
+ * @return {string}
+ */
+export const decodeMessage = (points, a, b, p) => {
+  let s = ''
+  let k = 20
+  for(let i = 0; i < points.length; i++){
+    let m = Math.floor((points[i].x - 1)/k);
+
+    // petakan ke:
+    // A, B, ..., Z = 10, 11, ..., 35
+    // a, b, ..., z = 36, 37, ..., 61
+    s += String.fromCharCode(m);
+  }
+  return s;
+}
