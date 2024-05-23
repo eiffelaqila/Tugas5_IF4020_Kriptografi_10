@@ -1,23 +1,11 @@
-const encrypt = async (inputText, key) => {
-  const res = await fetch("/blockcipher/ecb/encrypt", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ inputText, key }),
-  });
+import { ecbEncrypt, ecbDecrypt } from "../cipher/modes/ecb";
 
-  const data = await res.json();
-  return data.ciphertext;
+const encrypt = async (inputText, key) => {
+  return ecbEncrypt(inputText, key)
 }
 
 const decrypt = async (inputText, key) => {
-  const res = await fetch("/blockcipher/ecb/decrypt", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ inputText, key }),
-  });
-
-  const data = await res.json();
-  return data.plaintext;
+  return ecbDecrypt(inputText, key)
 }
 
 export { encrypt, decrypt };
