@@ -1,7 +1,7 @@
 import BN from "bn.js"
 import crypto from "crypto"
 
-const pCurve = {
+export const pCurve = {
   "secp128r1": {
     p: new BN("FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFF", 16),
     a: new BN("FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFC", 16),
@@ -75,7 +75,7 @@ export default class ECDH {
   computeSharedSecret(otherPublicKey) {
     const {x, y} = otherPublicKey;
     const publicKey = { x: new BN(x, 16), y: new BN(y, 16) };
-    
+
     let sharedSecret = this.scalarMultiply(publicKey);
     sharedSecret = sharedSecret.x.toString("hex");
     if (sharedSecret.length % 2 !== 0) {
