@@ -7,7 +7,7 @@ const MessageInput = () => {
 	const [message, setMessage] = useState("");
 	const { loading, sendMessage } = useSendMessage();
 	const [isShowDS, setShowDS] = useState(false);
-	const [enableDS, setEnableDS] = useState(false);
+	const [isDSEnable, setDSEnable] = useState(false);
 
 	const { privateKeyFileContent, signMessage, handleUploadPrivateKeyFile } = useSchnorrDS()
 
@@ -15,8 +15,12 @@ const MessageInput = () => {
 		e.preventDefault();
 		if (!message) return;
 
-		const signedMessage = signMessage(message);
-		await sendMessage(signedMessage);
+		if (isDSEnable) {
+			const signedMessage = signMessage(message);
+			await sendMessage(signedMessage);
+		} else {
+			await sendMessage(message);
+		}
 		setMessage("");
 	};
 
@@ -57,9 +61,9 @@ const MessageInput = () => {
 								disabled={!privateKeyFileContent}
 								id="checkbox"
 								type="checkbox"
-								value={enableDS}
+								value={isDSEnable}
 								className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-								onChange={(e) => setEnableDS(e.target.value)}
+								onChange={() => setDSEnable(!isDSEnable)}
 							/>
 							<label htmlFor="checkbox" className="text-sm font-medium text-gray-900 ms-2 dark:text-gray-300">Enable</label>
 						</div>
