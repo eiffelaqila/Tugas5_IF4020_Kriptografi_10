@@ -1,108 +1,7 @@
 /* eslint-disable no-unused-vars */
-
-/**
- * ECC (Elliptic Curve Cryptography) utility functions
- */
-
-/**
- * @description Count gradient of the line PQ in the Galois field (mod p)
- * @param {{x: number, y: number}} p point P
- * @param {{x: number, y: number}} q point Q
- * @param {number} n (mod p)
- * @returns {number}
- */
-export const gradient = (p, q, n) => {
-  const x = q.x - p.x;
-  const y = q.y - p.y;
-  for (let i = 1; i < n; i++) {
-    if ((y * i) % n === 1) {
-      return i % n;
-    }
-  }
-};
-
-/**
- * @description Count the R of P + Q = R inside the Galois field (mod p)
- * @param {{x: number, y: number}} p point P
- * @param {{x: number, y: number}} q point Q
- * @param {number} n (mod p)
- * @returns {{x: number, y: number}}
- */
-export const pointAddition = (p, q, n) => {
-  const m = gradient(p, q, n);
-  let xr = (Math.pow(m, 2) - p.x - q.x) % n;
-  let yr = (m * (p.x - xr) - p.y) % n;
-  return { xr, yr };
-};
-
-/**
- * @description Count the R of P - Q = R inside the Galois field (mod p)
- * @param {{x: number, y: number}} p point P
- * @param {{x: number, y: number}} q point Q
- * @param {number} n (mod p)
- * @returns {{x: number, y: number}}
- */
-export const pointSubstraction = (p, q, n) => {
-  const m = gradient(p, q, n);
-  const minQ = { x: q.x, y: -q.y };
-  const xr = Math.pow(m, 2) - p.x - (minQ.x % n);
-  const yr = m * (p.x - xr) - (p.y % n);
-  return { xr, yr };
-};
-
-/**
- * @description Point doubling (P + P = 2P = R)
- * @param {{x: number, y: number}} p point P
- * @param {number} a x coefficient
- * @param {number} n (mod p)
- * @returns {{x: number, y: number}}
- */
-export const pointDoubling = (p, a, n) => {
-  if (p.y === 0) {
-    return { x: 0, y: 0 };
-  }
-
-  const m = (3 * Math.pow(p.x, 2) + a) % n;
-  const xr = Math.pow(m, 2) - ((2 * p.x) % n);
-  const yr = m * (p.x - xr) - (p.y % n);
-  return { xr, yr };
-};
-
-/**
- * @description Point iteration (P^k = kP = P + P + ... + P)
- * @param {{x: number, y: number}} p
- * @param {number} k
- * @returns {{x: number, y: number}}
- */
-export const pointIteration = (p, k) => {
-  // TODO: test this function
-  let result = { x: 0, y: 0 };
-  for (let i = 0; i < k; i++) {
-    result = pointAddition(result, p); // this can be optimized
-  }
-  return result;
-};
-
-/**
- * @description List all points in the elliptic curve y^2 ≡ x^3 + ax + b (mod p) in the Galois field
- * @param {number} a
- * @param {number} b
- * @param {number} p
- * @returns {{x: number, y: number}[]}
- */
-export const listPoints = (a, b, p) => {
-  const points = [{x: 0, y:0}]
-  for (let x = 0; x < p; x++) {
-    // count if y^2 ≡ x^3 + ax + b (mod p)
-    const y2 = Math.pow(x, 3) + a * x + b;
-    for (let y = 0; y < p; y++) {
-      if (Math.pow(y, 2) % p === y2 % p) {
-        points.push({ x, y });
-      }
-    }
-  }
-  return points;
-};
+import BN from "bn.js";
+import crypto from "crypto";
+import { pCurve } from "./ecdh";
 
 /**
  * Encode messages into points inside Elliptic Curve y^2 ≡ x^3 + ax + b (mod p) using Kolbitz
@@ -144,6 +43,7 @@ export const encodeMessage = (s, a, b, p) => {
 
   return points;
 }
+// TODO: Change into BN
 
 /**
  * Decode points inside Elliptic Curve y^2 ≡ x^3 + ax + b (mod p) into string message using Kolbitz
@@ -153,7 +53,7 @@ export const encodeMessage = (s, a, b, p) => {
  * @param {number} p
  * @return {string}
  */
-export const decodeMessage = (points, a, b, p) => {
+export const decodeMessage = (points) => {
   let s = ''
   let k = 20
   for(let i = 0; i < points.length; i++){
@@ -166,3 +66,135 @@ export const decodeMessage = (points, a, b, p) => {
   }
   return s;
 }
+// TODO: Change into BN
+
+const pointAdd = (p, q) => {
+  if (!p) return q;
+  if (!q) return p;
+  const curveA = pCurve["secp128r1"].a
+  const curveP = pCurve["secp128r1"].p
+  const { x: x1, y: y1 } = p;
+  const { x: x2, y: y2 } = q;
+
+  // if P' = -P, then point is at infinity (P + (-P) = O)
+  if (x1.cmp(x2) === 0 && y1.cmp(y2) !== 0) {
+    return null;
+  }
+
+  let lambda;
+  if (x1.cmp(x2) === 0) {
+    // lambda = ((3x_p^2 + a)/2y_p) (mod p)
+    lambda = ((x1.pow(new BN(2)).muln(3)).add(curveA)).mul(y1.muln(2).invm(curveP)).umod(curveP);
+  } else {
+    // lambda = ((y_p - y_q)/(x_p - x_q)) (mod p)
+    lambda = (y1.sub(y2)).mul(x1.sub(x2).invm(curveP)).umod(curveP);
+  }
+
+  const x3 = lambda.pow(new BN(2)).sub(x1).sub(x2).umod(curveP);
+  const y3 = lambda.mul(x1.sub(x3)).sub(y1).umod(curveP);
+
+  return { x: x3, y: y3 };
+}
+
+/**
+ * @param {BN} k
+ * @param {{x: BN, y: BN}} point
+ */
+const scalarMultiply = (k, point) => {
+  let result = null;
+  let addend = point;
+
+  while (k.cmpn(0) > 0) {
+    if (k.andln(1) === 1) {
+      result = pointAdd(result, addend);
+    }
+    addend = pointAdd(addend, addend);
+    k = k.shrn(1);
+  }
+
+  return result;
+}
+
+export const generateRandomPrivateKey = (n) => {
+  let key = new BN(crypto.randomBytes(n), 16);
+  while (key.cmp(pCurve["secp128r1"].n) >= 0 || key.isZero()) {
+    key = new BN(crypto.randomBytes(n), 16);
+  }
+  return key;
+}
+
+export const generatePublicKey = (privateKey) => {
+  let result = null;
+  let addend = pCurve["secp128r1"].G;
+  let k = privateKey;
+
+  while (k.cmpn(0) > 0) {
+    if (k.andln(1) === 1) {
+      result = pointAdd(result, addend);
+    }
+    addend = pointAdd(addend, addend);
+    k = k.shrn(1);
+  }
+
+  return result;
+}
+
+/**
+ * @param {{x: BN, y: BN}} messagePoint
+ * @param {{x: BN, y: BN}} publicKey
+ * @returns {c1: {x: BN, y: BN}, c2: {x: BN, y: BN}}
+ */
+const encryptPoint = (messagePoint, publicKey) => {
+  const k = 1; // TODO: generate random k
+  const c1 = scalarMultiply(new BN(k), pCurve["secp128r1"].G);
+  const c2 = pointAdd(messagePoint, scalarMultiply(new BN(k), publicKey));
+  return { c1, c2 };
+}
+
+/**
+ * @param {{x: BN, y: BN}[]} messagePoint
+ * @param {{x: BN, y: BN}} publicKey
+ */
+export const encryptPoints = (messagePoints, publicKey) => {
+  return messagePoints.map(point => encryptPoint(point, publicKey));
+}
+
+/**
+ * @param {{x: BN, y: BN}} cipherPoint
+ * @param {BN} privateKey
+ */
+const decryptPoint = (cipherPoint, privateKey) => {
+  const k = 1; // TODO: generate random k
+  // Bob mula-mula menghitung hasil kali titik c1 dengan private key-nya
+  let p = scalarMultiply(privateKey, cipherPoint.c1);
+  // Bob kemudian mengurangkan titik kedua dari Pc dengan hasil kali titik c1 dengan private key-nya
+  let messagePoint = pointAdd(cipherPoint.c2, { x: p.x, y: p.y.neg() });
+
+  return messagePoint;
+}
+
+/**
+ * @param {{x: BN, y: BN}[]} cipherPoints
+ * @param {BN} privateKey
+ */
+export const decryptPoints = (cipherPoints, privateKey) => {
+  return cipherPoints.map(point => decryptPoint(point, privateKey));
+}
+
+/**** TESTING GROUND */
+// const priv = generateRandomPrivateKey(16);
+// const pub = generatePublicKey(priv);
+// console.log("Private key:", priv);
+// console.log("Public key:", pub);
+// const randomPoints = [
+//   {
+//     x: new BN('ab2603ee3aec52ae00b09b65ca856d7', 16),
+//     y: new BN('78b3a52f735de2ac4ee3e0bafeaa30a0', 16)
+//   },
+// ];
+// console.log('Random points:', randomPoints);
+// const cip = encryptPoints(randomPoints, pub);
+// console.log('Cipherpoints:', cip);
+// const dec = decryptPoints(cip, priv);
+// console.log('Decrypted:', dec);
+// console.log('Is equal:', JSON.stringify(randomPoints) === JSON.stringify(dec));
