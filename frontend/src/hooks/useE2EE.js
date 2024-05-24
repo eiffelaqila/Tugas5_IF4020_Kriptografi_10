@@ -20,9 +20,10 @@ const useE2EE = () => {
    * @returns {string}
    */
   const e2eeDecrypt = (data) => {
-    const decoded = decodeMessage(data);
-    const decrypted = decryptPoints(decoded, privateKey);
-    return decrypted;
+    console.log('e2eeDecrypt input:', data);
+    const decrypted = decryptPoints(data, privateKey);
+    const decoded = decodeMessage(decrypted);
+    return decoded;
   }
 
   return {
