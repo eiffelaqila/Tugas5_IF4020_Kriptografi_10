@@ -1,7 +1,20 @@
 /* eslint-disable no-unused-vars */
 import BN from "bn.js";
 import crypto from "crypto";
-import { pCurve } from "./ecdh";
+// import { pCurve } from "./ecdh";
+
+const pCurve = {
+  "secp128r1": {
+    p: new BN("FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFF", 16),
+    a: new BN("FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFC", 16),
+    b: new BN("E87579C11079F43DD824993C2CEE5ED3", 16),
+    G: {
+      x: new BN("161FF7528B899B2D0C28607CA52C5B86", 16),
+      y: new BN("CF5AC8395BAFEB13C02DA292DDED7A83", 16)
+    },
+    n: new BN("FFFFFFFE0000000075A30D1B9038A115", 16)
+  }
+}
 
 /**
  * Encode messages into points inside Elliptic Curve y^2 ≡ x^3 + ax + b (mod p) using Kolbitz
@@ -28,7 +41,7 @@ export const encodeMessage = (s) => {
     // cari nilai y yang memenuhi y^2 = x^3 + ax + b (mod p)
     // invers modulo p dari x^3 + ax + b
     let y = fx.pow(new BN(1, 2)).umod(p);
-    points.push({ x: x.toNumber(), y: y });
+    points.push({ x: x, y: y });
   }
   return points;
 }
@@ -55,8 +68,6 @@ export const decodeMessage = (points) => {
 const pointAdd = (p, q) => {
   if (!p) return q;
   if (!q) return p;
-  const curveA = pCurve["secp128r1"].a
-  const curveP = pCurve["secp128r1"].p
   const { x: x1, y: y1 } = p;
   const { x: x2, y: y2 } = q;
 
@@ -66,6 +77,8 @@ const pointAdd = (p, q) => {
   }
 
   let lambda;
+  const curveA = pCurve["secp128r1"].a
+  const curveP = pCurve["secp128r1"].p
   if (x1.cmp(x2) === 0) {
     // lambda = ((3x_p^2 + a)/2y_p) (mod p)
     lambda = ((x1.pow(new BN(2)).muln(3)).add(curveA)).mul(y1.muln(2).invm(curveP)).umod(curveP);
@@ -81,7 +94,7 @@ const pointAdd = (p, q) => {
 }
 
 /**
- * @param {BN} k
+ * @param {number} k
  * @param {{x: BN, y: BN}} point
  */
 const scalarMultiply = (k, point) => {
@@ -137,7 +150,8 @@ const encryptPoint = (messagePoint, publicKey) => {
 
 /**
  * @param {{x: BN, y: BN}[]} messagePoint
- * @param {{x: BN, y: BN}} publicKey
+ * @param {{x: BN, y: BN}}
+ * @returns {{c1: {x: BN, y: BN}, c2: {x: BN, y: BN}}[]}
  */
 export const encryptPoints = (messagePoints, publicKey) => {
   return messagePoints.map(point => encryptPoint(point, publicKey));
@@ -170,15 +184,11 @@ export const decryptPoints = (cipherPoints, privateKey) => {
 // const pub = generatePublicKey(priv);
 // console.log("Private key:", priv);
 // console.log("Public key:", pub);
-// const randomPoints = [
-//   {
-//     x: new BN('ab2603ee3aec52ae00b09b65ca856d7', 16),
-//     y: new BN('78b3a52f735de2ac4ee3e0bafeaa30a0', 16)
-//   },
-// ];
+// const randomPoints = encodeMessage('aku');
 // console.log('Random points:', randomPoints);
 // const cip = encryptPoints(randomPoints, pub);
 // console.log('Cipherpoints:', cip);
 // const dec = decryptPoints(cip, priv);
 // console.log('Decrypted:', dec);
-// console.log('Is equal:', JSON.stringify(randomPoints) === JSON.stringify(dec));
+// console.log('Decoded:', decodeMessage(dec));
+// console.log('Is equal:', decodeMessage(dec) === 'aku');
