@@ -6,59 +6,44 @@ import { pCurve } from "./ecdh";
 /**
  * Encode messages into points inside Elliptic Curve y^2 ≡ x^3 + ax + b (mod p) using Kolbitz
  * @param {string} s string that will be encoded
- * @param {number} a coefficient in elliptic curve equation
- * @param {number} b constants in elliptic curve equation
- * @param {number} p p in elliptic curve e equation
- * @return {{x: number, y:number}[]} array of points with length s.length
+ * @return {{x: BN, y: BN}[]} array of points with length s.length
  */
-export const encodeMessage = (s, a, b, p) => {
+export const encodeMessage = (s) => {
   let points = [];
+  const p = pCurve["secp128r1"].p;
+  const a = pCurve["secp128r1"].a;
+  const b = pCurve["secp128r1"].b;
 
-  // karakter penyusun pesan 0,1,2,...,9
-  // A,B,C,...,Z = 10,11,12,...,35
-  // kodekan tiap karakter pesan menjadi nilai m
   for (let i = 0; i < s.length; i++){
-    let m = s.charCodeAt(i);
-
+    // karakter penyusun pesan 0,1,2,...,9
+    // A,B,C,...,Z = 10,11,12,...,35
+    // kodekan tiap karakter pesan menjadi nilai m
+    let m = new BN(s.charCodeAt(i))
     // pilih k sebagai parameter basis, disepakati 2 pihak
-    let k = 20;
-
-    // untuk setiap nilai mk, nyatakan x = mk + 1, sulihi nilai x ke dalam kurva eliptik. y^2 = x^3 + ax + b (mod p).
-    let found = false;
-    let j = 1;
-    do {
-      let x = m * k + j;
-      let fx = (Math.pow(x, 3) + a * x + b) % p;
-
-      // jika ada nilai y yang memenuhi y^2 ≡ x^3 + ax + b (mod p), maka (x,y) adalah titik pada kurva eliptik
-      let y = 0;
-      while (Math.pow(y, 2) % p !== fx && y < p) y++;
-      if (Math.pow(y, 2) % p === fx) {
-        points.push({ x, y });
-        found = true;
-      }
-      j++;
-    } while (!found && j < 10);
+    let k = 20; // TODO: Generate random k
+    // untuk setiap nilai mk, nyatakan x = mk + 1, sulihi nilai x ke dalam kurva eliptik. y^2 = x^3 + ax + b (mod p). Jika x tidak ada, pilih x = mk + 1
+    let j = new BN(1);
+    let x = m.muln(k).add(j);
+    let fx = x.pow(new BN(3)).add(a.mul(x)).add(b).umod(p);
+    // cari nilai y yang memenuhi y^2 = x^3 + ax + b (mod p)
+    // invers modulo p dari x^3 + ax + b
+    let y = fx.pow(new BN(1, 2)).umod(p);
+    points.push({ x: x.toNumber(), y: y });
   }
-
   return points;
 }
-// TODO: Change into BN
 
 /**
  * Decode points inside Elliptic Curve y^2 ≡ x^3 + ax + b (mod p) into string message using Kolbitz
- * @param {{x: number, y: number}[]} points
- * @param {number} a
- * @param {number} b
- * @param {number} p
+ * @param {{x: BN, y: BN}[]} points
  * @return {string}
  */
 export const decodeMessage = (points) => {
   let s = ''
   let k = 20
   for(let i = 0; i < points.length; i++){
-    let m = Math.floor((points[i].x - 1)/k);
-
+    let x = new BN(points[i].x)
+    let m = x.subn(1).divn(k).toNumber()
     // petakan ke:
     // A, B, ..., Z = 10, 11, ..., 35
     // a, b, ..., z = 36, 37, ..., 61
@@ -66,7 +51,6 @@ export const decodeMessage = (points) => {
   }
   return s;
 }
-// TODO: Change into BN
 
 const pointAdd = (p, q) => {
   if (!p) return q;
