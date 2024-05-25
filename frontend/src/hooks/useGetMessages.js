@@ -38,7 +38,7 @@ const useGetMessages = () => {
         // setMessages(messages);
 				setMessages(e2eeDecryptedMessage);
 			} catch (error) {
-				toast.error(error.message);
+				// toast.error(error.message);
         console.error(error.stack);
 			} finally {
 				setLoading(false);

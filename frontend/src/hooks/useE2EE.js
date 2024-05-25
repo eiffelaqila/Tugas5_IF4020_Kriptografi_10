@@ -29,10 +29,10 @@ const useE2EE = () => {
 
   /**
    * @param {string} data string like "[{\"c1\":{\"x\":\"161ff7528b899..."
+   * @param {string} privateKey
    * @returns {string}
    */
-  const e2eeDecrypt = (data) => {
-    const privateKey = getCurrentPrivateKey();
+  const e2eeDecrypt = (data, privateKey = getCurrentPrivateKey()) => {
     const parsed = parseCipherPoints(JSON.parse(data));
     const decrypted = decryptPoints(parsed, privateKey);
     const decoded = decodeMessage(decrypted);

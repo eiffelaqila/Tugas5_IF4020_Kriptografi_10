@@ -32,12 +32,10 @@ const useSendMessage = () => {
 
 			const decrypted = await decrypt(newEncryptedMessage, sharedSecret);
 			const { newMessage } = JSON.parse(decrypted);
-      console.log(messages)
 			setMessages([...messages, {
         ...newMessage,
         message: message
-      }
-      ]);
+      }]);
 		} catch (error) {
       toast.error(error.message);
 			console.error(error.stack);
