@@ -41,9 +41,9 @@ const MessageContainer = () => {
       {!selectedConversation ? (
         <NoChatSelected />
       ) : !isKeysSet ? (
-        <div className="p-10 justify-center align-center flex flex-col gap-5">
-          <div className="flex gap-2 items-end">
-            <label>
+        <div className="p-10 flex flex-col gap-5">
+          <div className="flex gap-2 justify-stretch items-end">
+            <label className="w-full">
               Your private key
               <input
                 className='border text-sm rounded-lg block w-full p-2.5  bg-gray-700 border-gray-600 text-white'
@@ -70,7 +70,7 @@ const MessageContainer = () => {
             />
           </div>
           <div className="flex gap-2 items-end">
-            <label>
+            <label className="w-full">
               {selectedConversation.username}&apos;s public key
               <input
                 className='border text-sm rounded-lg block w-full p-2.5  bg-gray-700 border-gray-600 text-white'
@@ -97,6 +97,9 @@ const MessageContainer = () => {
             />
           </div>
           <button className="btn" onClick={handleSetKeys}>Enter chat</button>
+          <p className="border text-sm rounded-lg block w-full p-2.5  bg-gray-200 border-gray-600 text-black">
+            This conversation is encrypted using end-to-end encryption (E2EE). Make sure you use consistent keys with {selectedConversation.username} from the selected conversation. Key inconsistency will result in unreadable messages.
+          </p>
         </div>
       ) : (
         <>
