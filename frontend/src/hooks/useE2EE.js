@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { decodeMessage, decryptPoints, encodeMessage, encryptPoints } from '../utils/ecc';
+import { decryptPoints, encodeMessage, decodeMessage, encryptPoints } from '../utils/ecc';
 
 const useE2EE = () => {
 
@@ -19,7 +19,9 @@ const useE2EE = () => {
    * @returns {{c1: {x: BN, y: BN}, c2: {x: BN, y: BN}}[]}
    */
   const e2eeEncrypt = (message) => {
+    // Receiver's public key
     const publicKey = getCurrentPublicKey();
+
     const encoded = encodeMessage(message);
     const encrypted = encryptPoints(encoded, publicKey);
     return encrypted;
@@ -31,8 +33,8 @@ const useE2EE = () => {
    */
   const e2eeDecrypt = (data) => {
     const privateKey = getCurrentPrivateKey();
-    console.log('privateKey:', privateKey);
-    const decrypted = decryptPoints(parseCipherPoints(data), privateKey);
+    const parsed = parseCipherPoints(data);
+    const decrypted = decryptPoints(parsed, privateKey);
     const decoded = decodeMessage(decrypted);
     return decoded;
   }
