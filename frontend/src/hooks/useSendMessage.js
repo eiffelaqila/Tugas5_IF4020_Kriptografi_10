@@ -10,7 +10,7 @@ const useSendMessage = () => {
 	const [loading, setLoading] = useState(false);
 	const { messages, setMessages, selectedConversation } = useConversation();
 	const { sharedSecret } = useSocketContext();
-  const { e2eeEncrypt, e2eeDecrypt } = useE2EE();
+  const { e2eeEncrypt } = useE2EE();
 
 	const sendMessage = async (message) => {
 		setLoading(true);

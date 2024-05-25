@@ -14,6 +14,7 @@ const MessageContainer = () => {
 
   useEffect(() => {
 		// cleanup function (unmounts)
+    setIsKeysSet(false);
 		return () => setSelectedConversation(null);
 	}, [setSelectedConversation]);
 
