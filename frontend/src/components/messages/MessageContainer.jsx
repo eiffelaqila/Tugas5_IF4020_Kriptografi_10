@@ -11,6 +11,8 @@ const MessageContainer = () => {
   const [isKeysSet, setIsKeysSet] = useState(false);
   const pubKeyRef = useRef();
   const privKeyRef = useRef();
+  const pubKeyUploadRef = useRef();
+  const privKeyUploadRef = useRef();
 
   useEffect(() => {
 		// cleanup function (unmounts)
@@ -24,8 +26,6 @@ const MessageContainer = () => {
       const privKey = new BN(rawPrivKey, 16);
       const rawPubKey = JSON.parse(pubKeyRef.current.value);
       const pubKey = { x: new BN(rawPubKey.x, 16), y: new BN(rawPubKey.y, 16) };
-      // setPublicKey(pubKey);
-      // setPrivateKey(privKey);
 
       // store ke localStorage
       localStorage.setItem('cv', JSON.stringify(privKey));
@@ -42,21 +42,61 @@ const MessageContainer = () => {
         <NoChatSelected />
       ) : !isKeysSet ? (
         <div className="p-10 justify-center align-center flex flex-col gap-5">
-          <div>
-            <input
-              className='border text-sm rounded-lg block w-full p-2.5  bg-gray-700 border-gray-600 text-white'
-              placeholder="Your private key"
-              ref={privKeyRef}
+          <div className="flex gap-2 items-end">
+            <label>
+              Your private key
+              <input
+                className='border text-sm rounded-lg block w-full p-2.5  bg-gray-700 border-gray-600 text-white'
+                placeholder="Your private key"
+                ref={privKeyRef}
+              />
+            </label>
+            <button className='btn'
+              onClick={() => privKeyUploadRef.current.click()}
+            >
+              Upload
+            </button>
+            <input type="file" className="hidden" accept=".ecprv"
+              onChange={() => {
+                const file = privKeyUploadRef.current.files[0];
+                const fr = new FileReader();
+                fr.readAsText(file);
+                fr.onload = async () => {
+                  privKeyRef.current.value = fr.result;
+                  console.log(fr.result);
+                };
+              }}
+              ref={privKeyUploadRef}
             />
           </div>
-          <div>
-            <input
-              className='border text-sm rounded-lg block w-full p-2.5  bg-gray-700 border-gray-600 text-white'
-              placeholder={`${selectedConversation.username}'s public key`}
-              ref={pubKeyRef}
+          <div className="flex gap-2 items-end">
+            <label>
+              {selectedConversation.username}&apos;s public key
+              <input
+                className='border text-sm rounded-lg block w-full p-2.5  bg-gray-700 border-gray-600 text-white'
+                placeholder={`${selectedConversation.username}'s public key`}
+                ref={pubKeyRef}
+              />
+            </label>
+            <button className='btn'
+              onClick={() => pubKeyUploadRef.current.click()}
+            >
+              Upload
+            </button>
+            <input type="file" className="hidden"  accept=".ecpub"
+              ref={pubKeyUploadRef}
+              onChange={() => {
+                const file = pubKeyUploadRef.current.files[0];
+                const fr = new FileReader();
+                fr.readAsText(file);
+                fr.onload = async () => {
+                  pubKeyRef.current.value = fr.result;
+                  console.log(fr.result);
+                };
+              }}
             />
           </div>
-          <button onClick={handleSetKeys}>Enter chat</button>
+          <button className="btn" onClick={handleSetKeys}>Enter chat</button>
         </div>
       ) : (
         <>
