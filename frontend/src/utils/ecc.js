@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import BN from "bn.js";
-import crypto from "crypto";
+import BlumBlumShub from "./blumBlumShub.js";
 // import { pCurve } from "./ecdh";
 
 const pCurve = {
@@ -112,10 +112,23 @@ const scalarMultiply = (k, point) => {
   return result;
 }
 
+const getRandomBytes = (size) => {
+  const p = 30000000091n;
+  const q = 40000000003n;
+  let seed = BigInt((new Date()).getTime()) % p*q;
+  while (seed == 0 || seed == 1){
+    seed = BigInt((new Date()).getTime()) % p*q;
+  }
+
+  const bbs = new BlumBlumShub(p, q, seed);
+  const randomBytes = bbs.nextBytes(size);
+  return randomBytes.toString(16);
+}
+
 export const generateRandomPrivateKey = (n) => {
-  let key = new BN(crypto.randomBytes(n), 16);
+  let key = new BN(getRandomBytes(n), 16);
   while (key.cmp(pCurve["secp128r1"].n) >= 0 || key.isZero()) {
-    key = new BN(crypto.randomBytes(n), 16);
+    key = new BN(getRandomBytes(n), 16);
   }
   return key;
 }

@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import BlumBlumShub from "./blumBlumShub.js"
 import SHA3 from './sha3.js';
 
 export default class SchnorrDS {
@@ -51,8 +51,21 @@ export default class SchnorrDS {
     this.a = a;
   }
 
+  getRandomBytes(size) {
+    const p = 30000000091n;
+    const q = 40000000003n;
+    let seed = BigInt((new Date()).getTime()) % p*q;
+    while (seed == 0 || seed == 1){
+      seed = BigInt((new Date()).getTime()) % p*q;
+    }
+
+    const bbs = new BlumBlumShub(p, q, seed);
+    const randomBytes = bbs.nextBytes(size);
+    return randomBytes.toString(16);
+  }
+
   generatePrivateKey() {
-    let privateKey = BigInt("0x" + crypto.randomBytes(32).toString("hex"))
+    let privateKey = BigInt("0x" + this.getRandomBytes(32))
     if ((privateKey > (this.q - BigInt(1))) || (privateKey == (BigInt(0)))) {
       privateKey = privateKey % (this.q - BigInt(1)) + BigInt(1);
     }
@@ -76,7 +89,7 @@ export default class SchnorrDS {
   }
 
   signMessage(privateKey, message) {
-    let r = BigInt("0x" + crypto.randomBytes(32).toString("hex"))
+    let r = BigInt("0x" + this.getRandomBytes(32));
     if ((r > (this.q - BigInt(1))) || (r == (BigInt(0)))) {
       r = r % (this.q - BigInt(1)) + BigInt(1);
     }

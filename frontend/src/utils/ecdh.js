@@ -1,7 +1,7 @@
+import BlumBlumShub from "./blumBlumShub.js"
 import BN from "bn.js"
-import crypto from "crypto"
 
-export const pCurve = {
+const pCurve = {
   "secp128r1": {
     p: new BN("FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFF", 16),
     a: new BN("FFFFFFFDFFFFFFFFFFFFFFFFFFFFFFFC", 16),
@@ -21,10 +21,28 @@ export default class ECDH {
     this.publicKey = this.scalarMultiply(this.curve.G);
   }
 
+  getRandomBytes(size) {
+    const p = 30000000091n;
+    const q = 40000000003n;
+    let seed = BigInt((new Date()).getTime()) % p*q;
+    while (seed == 0 || seed == 1){
+      seed = BigInt((new Date()).getTime()) % p*q;
+    }
+
+    const bbs = new BlumBlumShub(p, q, seed);
+    const randomBytes = bbs.nextBytes(size);
+    return randomBytes.toString(16);
+  }
+
+  setPrivateKey(privateKey) {
+    this.privateKey = privateKey;
+    this.publicKey = this.scalarMultiply(this.curve.G);
+  }
+
   getRandomPrivateKey() {
-    let key = new BN(crypto.randomBytes(16), 16);
+    let key = new BN(this.getRandomBytes(16), 16);
     while (key.cmp(this.curve.n) >= 0 || key.isZero()) {
-      key = new BN(crypto.randomBytes(16), 16);
+      key = new BN(this.getRandomBytes(16), 16);
     }
     return key;
   }
@@ -86,3 +104,14 @@ export default class ECDH {
     return sharedSecret
   }
 }
+
+// EXAMPLE
+// const aliceEcdh = new ECDH("secp128r1");
+// const bobEcdh = new ECDH("secp128r1");
+
+// const aliceharedSecret = aliceEcdh.computeSharedSecret(bobEcdh.publicKey);
+// const bobSharedSecret = bobEcdh.computeSharedSecret(aliceEcdh.publicKey);
+
+// console.log(aliceharedSecret)
+// console.log(bobSharedSecret)
+// console.log(aliceharedSecret == bobSharedSecret)

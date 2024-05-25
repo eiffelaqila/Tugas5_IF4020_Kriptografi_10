@@ -1,6 +1,6 @@
-class BlumBlumShub {
+export default class BlumBlumShub {
     constructor(p, q, seed) {
-        if (!this.isPrime(p) || !this.isPrime(q) || p % 4 !== 3 || q % 4 !== 3) {
+        if (!this.isPrime(p) || !this.isPrime(q) || p % 4n !== 3n || q % 4n !== 3n) {
             throw new Error("p and q must be prime numbers congruent to 3 mod 4.");
         }
         this.n = p * q;
@@ -8,13 +8,13 @@ class BlumBlumShub {
     }
 
     isPrime(num) {
-        if (num <= 1) return false;
-        if (num <= 3) return true;
+        if (num <= 1n) return false;
+        if (num <= 3n) return true;
 
-        if (num % 2 === 0 || num % 3 === 0) return false;
+        if (num % 2n === 0n || num % 3n === 0n) return false;
 
-        for (let i = 5; i * i <= num; i += 6) {
-            if (num % i === 0 || num % (i + 2) === 0) return false;
+        for (let i = 5n; i * i <= num; i += 6n) {
+            if (num % i === 0n || num % (i + 2n) === 0n) return false;
         }
 
         return true;
@@ -22,12 +22,12 @@ class BlumBlumShub {
 
     nextBit() {
         this.state = (this.state * this.state) % this.n;
-        return this.state & 1;
+        return this.state & 1n;
     }
 
     nextBits(length) {
         let bits = 0n;
-        for (let i = 0; i < length; i++) {
+        for (let i = 0n; i < length; i++) {
             bits = (bits << 1n) | BigInt(this.nextBit());
         }
         return bits;
@@ -39,13 +39,19 @@ class BlumBlumShub {
 }
 
 // // Contoh penggunaan:
-// const p = 11; // Prime number p congruent to 3 mod 4
-// const q = 19; // Prime number q congruent to 3 mod 4
-// const seed = 3; // Seed value
+// const p = 30000000091n; // Prime number p congruent to 3 mod 4
+// const q = 40000000003n; // Prime number q congruent to 3 mod 4
+// let seed = BigInt((new Date()).getTime()) % p*q;; // Seed value
 
-// const bbs = new BlumBlumShub(p, q, seed);
+// let bbs = new BlumBlumShub(p, q, seed);
 
 // console.log(bbs.nextBytes(16)); // Generate 16 random bytes (128 bits) in BigInt
 // console.log(bbs.nextBytes(32)); // Generate 32 random bytes (256 bits) in BigInt
 // console.log(bbs.nextBits(128)); // Generate 128 random bits in BigInt
 // console.log(bbs.nextBits(256));  // Generate 256 random bits in BigInt
+
+// seed = BigInt((new Date()).getTime()) % p*q;
+// bbs = new BlumBlumShub(p, q, seed);
+
+// console.log(bbs.nextBytes(16)); // Generate 16 random bytes (128 bits) in BigInt
+// console.log(bbs.nextBytes(32));
