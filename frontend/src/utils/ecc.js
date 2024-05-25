@@ -139,7 +139,7 @@ export const generatePublicKey = (privateKey) => {
 /**
  * @param {{x: BN, y: BN}} messagePoint
  * @param {{x: BN, y: BN}} publicKey
- * @returns {c1: {x: BN, y: BN}, c2: {x: BN, y: BN}}
+ * @returns {{c1: {x: BN, y: BN}, c2: {x: BN, y: BN}}}
  */
 const encryptPoint = (messagePoint, publicKey) => {
   const k = 1; // TODO: generate random k
@@ -150,7 +150,7 @@ const encryptPoint = (messagePoint, publicKey) => {
 
 /**
  * @param {{x: BN, y: BN}[]} messagePoint
- * @param {{x: BN, y: BN}}
+ * @param {{x: BN, y: BN}} publicKey
  * @returns {{c1: {x: BN, y: BN}, c2: {x: BN, y: BN}}[]}
  */
 export const encryptPoints = (messagePoints, publicKey) => {
@@ -158,8 +158,9 @@ export const encryptPoints = (messagePoints, publicKey) => {
 }
 
 /**
- * @param {{x: BN, y: BN}} cipherPoint
+ * @param {{c1: {x: BN, y: BN}, c2: {x: BN, y: BN}}} cipherPoint
  * @param {BN} privateKey
+ * @returns {{x: BN, y: BN}}
  */
 const decryptPoint = (cipherPoint, privateKey) => {
   const k = 1; // TODO: generate random k
@@ -172,8 +173,9 @@ const decryptPoint = (cipherPoint, privateKey) => {
 }
 
 /**
- * @param {{x: BN, y: BN}[]} cipherPoints
+ * @param {{c1: {x: BN, y: BN}, c2: {x: BN, y: BN}}[]} cipherPoints
  * @param {BN} privateKey
+ * @returns {{x: BN, y: BN}[]}
  */
 export const decryptPoints = (cipherPoints, privateKey) => {
   return cipherPoints.map(point => decryptPoint(point, privateKey));

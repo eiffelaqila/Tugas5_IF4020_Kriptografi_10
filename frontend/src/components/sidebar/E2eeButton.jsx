@@ -1,18 +1,17 @@
 import { BiDownload } from "react-icons/bi";
-import { generatePublicKey, generateRandomPrivateKey } from "../../utils/ecc";
 
 const E2eeButton = () => {
   const handleDownloadKey = () => {
-    const privateKey = generateRandomPrivateKey(16);
+    const privateKey = JSON.parse(localStorage.getItem("v"));
     const privateBlob = new Blob([JSON.stringify(privateKey)], { type: 'text/plain' });
-    const publicKey = generatePublicKey(privateKey);
+    const publicKey = JSON.parse(localStorage.getItem("b"));
     const publicBlob = new Blob([JSON.stringify(publicKey)], { type: 'text/plain' });
 
     let url = URL.createObjectURL(privateBlob);
     let a = document.createElement('a');
     a.href = url;
     document.body.appendChild(a);
-    a.download = 'privateKey.ecpriv';
+    a.download = 'privateKey.ecprv';
     a.click();
     document.body.removeChild(a);
 

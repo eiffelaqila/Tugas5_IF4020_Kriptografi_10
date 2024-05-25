@@ -1,3 +1,4 @@
+import BN from "bn.js";
 import { useEffect, useRef, useState } from 'react';
 import { TiMessages } from "react-icons/ti";
 import { useAuthContext } from "../../context/AuthContext";
@@ -7,8 +8,7 @@ import Messages from "./Messages";
 
 const MessageContainer = () => {
   const { selectedConversation, setSelectedConversation } = useConversation();
-  const [publicKey, setPublicKey] = useState('');
-  const [privateKey, setPrivateKey] = useState('');
+  const [isKeysSet, setIsKeysSet] = useState(false);
   const pubKeyRef = useRef();
   const privKeyRef = useRef();
 
@@ -17,39 +17,45 @@ const MessageContainer = () => {
 		return () => setSelectedConversation(null);
 	}, [setSelectedConversation]);
 
-  useEffect(() => {
-    setPublicKey('');
-    setPrivateKey('');
-  }, [selectedConversation]);
+  const handleSetKeys = () => {
+    try {
+      const rawPrivKey = JSON.parse(privKeyRef.current.value);
+      const privKey = new BN(rawPrivKey, 16);
+      const rawPubKey = JSON.parse(pubKeyRef.current.value);
+      const pubKey = { x: new BN(rawPubKey.x, 16), y: new BN(rawPubKey.y, 16) };
+      // setPublicKey(pubKey);
+      // setPrivateKey(privKey);
+
+      // store ke localStorage
+      localStorage.setItem('cv', JSON.stringify(privKey));
+      localStorage.setItem('cb', JSON.stringify(pubKey));
+      setIsKeysSet(true);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
 	return (
     <div className="sm:min-w-[300px] md:min-w-[450px] flex flex-col">
       {!selectedConversation ? (
         <NoChatSelected />
-      ) : !publicKey && !privateKey ? (
+      ) : !isKeysSet ? (
         <div className="p-10 justify-center align-center flex flex-col gap-5">
           <div>
             <input
               className='border text-sm rounded-lg block w-full p-2.5  bg-gray-700 border-gray-600 text-white'
-              placeholder="Your public key"
-              ref={pubKeyRef}
+              placeholder="Your private key"
+              ref={privKeyRef}
             />
           </div>
           <div>
             <input
               className='border text-sm rounded-lg block w-full p-2.5  bg-gray-700 border-gray-600 text-white'
-              placeholder={`${selectedConversation.username}'s private key`}
-              ref={privKeyRef}
+              placeholder={`${selectedConversation.username}'s public key`}
+              ref={pubKeyRef}
             />
           </div>
-          <button
-            onClick={() => {
-              setPublicKey(pubKeyRef.current.value);
-              setPrivateKey(privKeyRef.current.value);
-            }}
-          >
-            Enter chat
-          </button>
+          <button onClick={handleSetKeys}>Enter chat</button>
         </div>
       ) : (
         <>

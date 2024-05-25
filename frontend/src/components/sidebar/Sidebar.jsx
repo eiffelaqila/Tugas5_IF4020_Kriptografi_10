@@ -1,7 +1,7 @@
 import Conversations from "./Conversations";
+import E2eeButton from "./E2eeButton";
 import LogoutButton from "./LogoutButton";
 import SchnorrButton from "./SchnorrButton";
-import E2eeButton from "./E2eeButton";
 import SearchInput from "./SearchInput";
 
 const Sidebar = () => {
@@ -11,9 +11,10 @@ const Sidebar = () => {
 			<div className='px-3 divider'></div>
 			<Conversations />
 			<div className='px-3 divider'></div>
-			<E2eeButton />
-			<div className='px-3 divider'></div>
-			<SchnorrButton />
+      <div className="flex flex-col gap-2">
+        <E2eeButton />
+        <SchnorrButton />
+      </div>
 			<div className='px-3 divider'></div>
 			<LogoutButton />
 		</div>
