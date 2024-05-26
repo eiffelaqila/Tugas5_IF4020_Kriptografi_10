@@ -18,7 +18,7 @@ const Message = ({message}) => {
 
 	const [showModal, setShowModal] = useState(false);
 
-	const { message: plainMessage, digitalSignature } = extractDS(message.message);
+	const { message: plainMessage, digitalSignature } = extractDS(message.senderMessage);
 
 	const handleVerify = () => {
 		setShowModal(true);

@@ -10,34 +10,46 @@ const useSendMessage = () => {
 	const [loading, setLoading] = useState(false);
 	const { messages, setMessages, selectedConversation } = useConversation();
 	const { sharedSecret } = useSocketContext();
-  const { e2eeEncrypt } = useE2EE();
+	const { e2eeEncrypt, e2eeDecrypt } = useE2EE();
 
 	const sendMessage = async (message) => {
 		setLoading(true);
 		try {
-      const e2eeEncryptedMessage = JSON.stringify(e2eeEncrypt(message));
-			const encrypted = await encrypt(JSON.stringify({ message: e2eeEncryptedMessage }), sharedSecret);
+			const { senderEncrypted, receiverEncrypted } = e2eeEncrypt(message);
+			const e2eeSenderEncryptedMessage = JSON.stringify(senderEncrypted);
+			const e2eeReceiverEncryptedMessage = JSON.stringify(receiverEncrypted);
 
-      const res = await fetch(`/api/messages/send/${selectedConversation._id}`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ encrypted }),
-			});
-			const { encrypted: newEncryptedMessage } = await res.json();
-			if (newEncryptedMessage.error) {
-				throw new Error(newEncryptedMessage.error);
-			}
+
+			const encrypted = await encrypt(
+				JSON.stringify({
+					senderMessage: e2eeSenderEncryptedMessage,
+					receiverMessage: e2eeReceiverEncryptedMessage
+				}),
+				sharedSecret,
+			);
+
+			const res = await fetch(`/api/messages/send/${selectedConversation._id}`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ encrypted }),
+					});
+					const { encrypted: newEncryptedMessage } = await res.json();
+					if (newEncryptedMessage.error) {
+						throw new Error(newEncryptedMessage.error);
+					}
 
 			const decrypted = await decrypt(newEncryptedMessage, sharedSecret);
 			const { newMessage } = JSON.parse(decrypted);
+
 			setMessages([...messages, {
         ...newMessage,
-        message: message
+        receiverMessage: e2eeDecrypt(newMessage.senderMessage),
+        senderMessage: e2eeDecrypt(newMessage.senderMessage)
       }]);
 		} catch (error) {
-      toast.error(error.message);
+			toast.error(error.message);
 			console.error(error.stack);
 		} finally {
 			setLoading(false);

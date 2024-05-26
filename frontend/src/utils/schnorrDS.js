@@ -1,4 +1,4 @@
-import BlumBlumShub from "./blumBlumShub.js"
+import BlumBlumShub from "./blumBlumShub.js";
 import SHA3 from './sha3.js';
 
 export default class SchnorrDS {
@@ -24,9 +24,9 @@ export default class SchnorrDS {
   modInv(base, mod) {
     let m_original = mod, temp, quotient;
     let x0 = BigInt(0), x1 = BigInt(1);
-  
+
     if (mod === BigInt(1)) return BigInt(0);
-  
+
     while (base > BigInt(1)) {
       quotient = base / mod;
       temp = mod;
@@ -34,11 +34,11 @@ export default class SchnorrDS {
       mod = base % mod;
       base = temp;
       temp = x0;
-  
+
       x0 = x1 - quotient * x0;
       x1 = temp;
     }
-  
+
     if (x1 < BigInt(0)) {
       x1 += m_original;
     }

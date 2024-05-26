@@ -1,5 +1,5 @@
 import BN from "bn.js";
-import { decodeMessage, decryptPoints, encodeMessage, encryptPoints } from '../utils/ecc';
+import { decodeMessage, decryptPoints, encodeMessage, encryptPoints, generatePublicKey } from '../utils/ecc';
 
 const useE2EE = () => {
 
@@ -10,21 +10,26 @@ const useE2EE = () => {
       y: new BN(raw.y, 16)
     }
   }
+  const getCurrentSenderPublicKey = (privateKey) => {
+    return generatePublicKey(privateKey);
+  }
   const getCurrentPrivateKey = () => {
     return new BN(JSON.parse(localStorage.getItem('cv')), 16);
   }
 
   /**
    * @param {string} message
-   * @returns {{c1: {x: BN, y: BN}, c2: {x: BN, y: BN}}[]}
+   * @returns {{ senderEncrypted: {c1: {x: BN, y: BN}, c2: {x: BN, y: BN}}[], receiverEncrypted: {c1: {x: BN, y: BN}, c2: {x: BN, y: BN}}[] }}
    */
-  const e2eeEncrypt = (message) => {
+  const e2eeEncrypt = (message, privateKey = getCurrentPrivateKey()) => {
     // Receiver's public key
-    const publicKey = getCurrentPublicKey();
+    const receiverPublicKey = getCurrentPublicKey();
+    const senderPublicKey = getCurrentSenderPublicKey(privateKey);
 
     const encoded = encodeMessage(message);
-    const encrypted = encryptPoints(encoded, publicKey);
-    return encrypted;
+    const senderEncrypted = encryptPoints(encoded, senderPublicKey);
+    const receiverEncrypted = encryptPoints(encoded, receiverPublicKey);
+    return { senderEncrypted, receiverEncrypted };
   }
 
   /**

@@ -63,7 +63,6 @@ const MessageContainer = () => {
                 fr.readAsText(file);
                 fr.onload = async () => {
                   privKeyRef.current.value = fr.result;
-                  console.log(fr.result);
                 };
               }}
               ref={privKeyUploadRef}
@@ -91,7 +90,6 @@ const MessageContainer = () => {
                 fr.readAsText(file);
                 fr.onload = async () => {
                   pubKeyRef.current.value = fr.result;
-                  console.log(fr.result);
                 };
               }}
             />

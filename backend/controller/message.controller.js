@@ -2,8 +2,8 @@ import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
 
+import { decrypt, encrypt } from "../utils/blockCipher.js";
 import { getSharedSecret } from "./ecdhHandshake.controller.js";
-import { encrypt, decrypt } from "../utils/blockCipher.js"
 
 export const sendMessage = async (req, res) => {
 	try {
@@ -22,13 +22,17 @@ export const sendMessage = async (req, res) => {
 		}
 
 		const sharedSecret = await getSharedSecret(senderId);
+    console.log('sharedSecret', sharedSecret)
+    console.log('encryptedMessage', encryptedMessage)
 		const decryptedMessage = await decrypt(encryptedMessage, sharedSecret);
-		const { message } = JSON.parse(decryptedMessage);
+    console.log('decryptedMessage', decryptedMessage);
+		const { senderMessage, receiverMessage } = JSON.parse(decryptedMessage);
 
 		const newMessage = new Message({
 			senderId,
 			receiverId,
-			message,
+			senderMessage,
+			receiverMessage,
 		});
 
 		if (newMessage) {
@@ -52,6 +56,7 @@ export const sendMessage = async (req, res) => {
 
 		res.status(201).json({ encrypted: encryptedNewMessage });
 	} catch (error) {
+    console.log(error);
 		console.log("Error in sendMessage controller: ", error.message);
 		res.status(500).json({ error: "Internal server error" });
 	}
@@ -79,7 +84,7 @@ export const getMessages = async (req, res) => {
 		const sharedSecret = await getSharedSecret(senderId);
 		const encrypted = await encrypt(JSON.stringify({ messages }), sharedSecret);
 
-		res.status(200).json({ 
+		res.status(200).json({
 			encrypted,
 		});
 	} catch (error) {

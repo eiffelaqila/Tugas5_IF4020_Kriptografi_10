@@ -48,10 +48,11 @@ const MessageInput = () => {
 				{isShowDS && (
 					<div className='flex gap-4 px-4 pb-4'>
 						<div className="w-full">
-							<label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white" htmlFor="file_input">Upload .scpriv file</label>
+							<label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white" htmlFor="file_input">Upload .scprv file</label>
 							<input
 								id='file_input'
 								type='file'
+                accept=".scprv"
 								className='block w-full gap-2 m-auto text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400'
 								onChange={handleUploadPrivateKeyFile}
 							/>

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { IoClose } from 'react-icons/io5';
-import useSchnorrDS from '../../hooks/useSchnorrDS'
+import useSchnorrDS from '../../hooks/useSchnorrDS';
 import { extractDS } from '../../utils/extractDS';
 
 const MessageContainer = ({ isvisible, onClose, message }) => {
-    const { message: plainMessage, digitalSignature } = extractDS(message.message)
+    const { message: plainMessage, digitalSignature } = extractDS(message.senderMessage)
     const { publicKeyFileContent, verifyMessage, handleUploadPublicKeyFile } = useSchnorrDS()
     const [result, setResult] = useState(null);
 
@@ -17,7 +17,6 @@ const MessageContainer = ({ isvisible, onClose, message }) => {
 
         if (digitalSignature) {
             const isValid = verifyMessage(plainMessage, digitalSignature);
-            console.log(isValid)
             setResult(isValid ? 'Valid' : 'Invalid');
         } else {
             setResult('No digital signature');
@@ -36,6 +35,7 @@ const MessageContainer = ({ isvisible, onClose, message }) => {
                     <input
                         id='file_input'
                         type='file'
+                        accept='.scpub'
                         className='block w-full gap-2 m-auto text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400'
                         onChange={handleUploadPublicKeyFile}
                     />

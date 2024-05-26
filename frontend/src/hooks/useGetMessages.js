@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
 import useConversation from "../store/useConversation";
 
+import { useAuthContext } from "../context/AuthContext";
 import { useSocketContext } from "../context/SocketContext";
 import { decrypt } from "../utils/blockCipher";
 import useE2EE from "./useE2EE";
 
 const useGetMessages = () => {
 	const [loading, setLoading] = useState(false);
+	const { authUser } = useAuthContext();
 	const { messages, setMessages, selectedConversation } = useConversation();
 	const { sharedSecret } = useSocketContext();
-  const { e2eeDecrypt } = useE2EE();
+	const { e2eeDecrypt } = useE2EE();
+
+	const isMessageSentByUser = (message) => message.senderId === authUser._id;
 
 	useEffect(() => {
 		const getMessages = async () => {
@@ -29,11 +32,10 @@ const useGetMessages = () => {
         const e2eeDecryptedMessage = messages.map((message) => {
           return {
             ...message,
-            message: e2eeDecrypt(message.message)
+            receiverMessage: isMessageSentByUser(message) ? e2eeDecrypt(message.senderMessage) : e2eeDecrypt(message.receiverMessage),
+            senderMessage: isMessageSentByUser(message) ? e2eeDecrypt(message.senderMessage) : e2eeDecrypt(message.receiverMessage),
           }
         })
-        console.log('messages:', messages);
-        console.log('e2eeDecryptedMessage:', e2eeDecryptedMessage)
 
         // setMessages(messages);
 				setMessages(e2eeDecryptedMessage);
