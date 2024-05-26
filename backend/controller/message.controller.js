@@ -22,10 +22,7 @@ export const sendMessage = async (req, res) => {
 		}
 
 		const sharedSecret = await getSharedSecret(senderId);
-    console.log('sharedSecret', sharedSecret)
-    console.log('encryptedMessage', encryptedMessage)
 		const decryptedMessage = await decrypt(encryptedMessage, sharedSecret);
-    console.log('decryptedMessage', decryptedMessage);
 		const { senderMessage, receiverMessage } = JSON.parse(decryptedMessage);
 
 		const newMessage = new Message({
@@ -56,7 +53,6 @@ export const sendMessage = async (req, res) => {
 
 		res.status(201).json({ encrypted: encryptedNewMessage });
 	} catch (error) {
-    console.log(error);
 		console.log("Error in sendMessage controller: ", error.message);
 		res.status(500).json({ error: "Internal server error" });
 	}
