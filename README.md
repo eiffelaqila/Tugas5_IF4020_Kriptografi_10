@@ -28,13 +28,15 @@
    npm install
    ```
 
-3. Run the program
+3. Copy `.env.example` to `.env`, and change the values
+
+4. Run the program
 
    ```bash
    npm run server
    ```
 
-4. Backend API is now running in `http://localhost:5000`
+5. Backend API is now running in `http://localhost:5000`
 
 ### Frontend
 
