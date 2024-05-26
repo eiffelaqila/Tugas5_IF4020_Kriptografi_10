@@ -60,45 +60,48 @@ function keyGenerator(key) {
 }
 
 function bytesToBitArray(bytes) {
-    const bitArray = [];
-    for (let byte of bytes) {
-        const bits = byte.toString(2).padStart(8, '0');
-        for (let bit of bits) {
-            bitArray.push(parseInt(bit, 10));
+    const bitArray = new Array(bytes.length * 8);
+    for (let i = 0; i < bytes.length; i++) {
+        const byte = bytes[i];
+        for (let bit = 0; bit < 8; bit++) {
+            bitArray[i * 8 + bit] = (byte >> (7 - bit)) & 1;
         }
     }
     return bitArray;
 }
 
 function bitArrayToBytes(bitArray) {
-    const bytes = [];
-    for (let i = 0; i < bitArray.length; i += 8) {
-        const byteBits = bitArray.slice(i, i + 8).join('');
-        bytes.push(parseInt(byteBits, 2));
+    const bytes = new Uint8Array(bitArray.length / 8);
+    for (let i = 0; i < bytes.length; i++) {
+        let byte = 0;
+        for (let bit = 0; bit < 8; bit++) {
+            byte |= bitArray[i * 8 + bit] << (7 - bit);
+        }
+        bytes[i] = byte;
     }
-    return new Uint8Array(bytes);
+    return bytes;
 }
 
 function f(subbitarray, internalKey) {
-    const rRamadhan = new Uint8Array(subbitarray.length / 8);
+    const tempArray = new Uint8Array(subbitarray.length / 8);
     for (let i = 0; i < subbitarray.length; i += 8) {
         const byte = parseInt(subbitarray.slice(i, i + 8).join(''), 2);
-        rRamadhan[i / 8] = byte ^ 'RAMADHAN'.charCodeAt(i / 8) ^ internalKey[i / 8];
+        tempArray[i / 8] = byte ^ 'RAMADHAN'.charCodeAt(i / 8) ^ internalKey[i / 8];
     }
 
-    const rRamadhanIntEvery4Bit = [];
-    for (let byte of rRamadhan) {
-        rRamadhanIntEvery4Bit.push((byte >> 4) & 0b1111);
-        rRamadhanIntEvery4Bit.push(byte & 0b1111);
+    const processedArray = [];
+    for (let byte of tempArray) {
+        processedArray.push((byte >> 4) & 0b1111);
+        processedArray.push(byte & 0b1111);
     }
 
-    const matrix = [[], [], [], []];
+    const matrix = Array.from({ length: 4 }, () => []);
     for (let i = 0; i < 16; i++) {
-        matrix[Math.floor(i / 4)].push(S_BOXES[i][rRamadhanIntEvery4Bit[i]]);
+        matrix[Math.floor(i / 4)].push(S_BOXES[i][processedArray[i]]);
     }
 
     for (let i = 0; i < matrix.length; i++) {
-        matrix[i] = matrix[i].slice(i).concat(matrix[i].slice(0, i));
+        matrix[i] = [...matrix[i].slice(i), ...matrix[i].slice(0, i)];
     }
 
     const flattenMatrixBitArray = [];
@@ -111,12 +114,7 @@ function f(subbitarray, internalKey) {
         }
     }
 
-    const resultXor = [];
-    for (let i = 0; i < P_BOX.length; i++) {
-        resultXor[i] = flattenMatrixBitArray[P_BOX[i]];
-    }
-
-    return resultXor;
+    return P_BOX.map(index => flattenMatrixBitArray[index]);
 }
 
 function iterationEncrypt(plainBitArray, internalKeys) {
@@ -125,7 +123,7 @@ function iterationEncrypt(plainBitArray, internalKeys) {
 
     for (let i = 0; i < 16; i++) {
         const fResult = f(L, internalKeys[i]);
-        const temp = L.slice();
+        const temp = L;
         L = R.map((bit, index) => bit ^ fResult[index]);
         R = temp;
     }
@@ -139,7 +137,7 @@ function iterationDecrypt(cipherBitArray, internalKeys) {
 
     for (let i = 15; i >= 0; i--) {
         const fResult = f(L, internalKeys[i]);
-        const temp = L.slice();
+        const temp = L;
         L = R.map((bit, index) => bit ^ fResult[index]);
         R = temp;
     }

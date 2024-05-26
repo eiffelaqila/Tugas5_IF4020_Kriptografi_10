@@ -1,8 +1,7 @@
 # Tugas5_IF4020_Kriptografi_10
 
 ## Requirement
-1. NPM (for frontend and backend)
-2. Python (for cipherblock)
+1. NPM
 
 ## How to run
 
@@ -13,25 +12,7 @@
    cd Tugas5_IF4020_Kriptografi_10
    ```
 
-2. Open three terminals, terminal 1 for `blockcipher`, terminal 2 for `backend`, and terminal 3 for `frontend`
-
-### Block Cipher API
-
-*) In the root folder.
-
-1. Install requirements
-
-   ```bash
-   pip install -r blockcipher/requirements.txt
-   ```
-
-2. Run the program from root
-
-   ```bash
-   uvicorn blockcipher.main:app --reload
-   ```
-
-3. Block cipher API is now running in `http://localhost:8080`
+2. Open two terminals, terminal 1 for `backend` and terminal 2 for `frontend`
 
 ### Backend
 
